@@ -28,7 +28,6 @@ func initialize() ports.CheckBoxDetector {
 		adapters.NewInternalImageGetter(),
 		adapters.NewInternalImageDecoder(),
 		adapters.NewInternalImageGrayer(),
-		adapters.NewInternalImagePixelHandler(),
 		adapters.NewInternalImageBinarizer())
 }
 

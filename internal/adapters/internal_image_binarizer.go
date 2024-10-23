@@ -18,7 +18,7 @@ func NewInternalImageBinarizer() *InternalImageBinarizer {
 	return &InternalImageBinarizer{}
 }
 
-// TODO Add nil defensive clause
+// TODO Add nil defensive clause.
 func (i *InternalImageBinarizer) ApplyWithAdaptiveThreshold(
 	img *image.Gray, blockSize, fineAdjustment int,
 ) *image.Gray {
@@ -40,7 +40,7 @@ func (i *InternalImageBinarizer) ApplyWithAdaptiveThreshold(
 	return bin
 }
 
-// Calc mean in "neighbourhood" pixels
+// Calc mean in "neighborhood" pixels.
 func calcMean(img *image.Gray, xCoord, yCoord, blockSize int) int {
 	sum := zeroConstant
 	count := zeroConstant

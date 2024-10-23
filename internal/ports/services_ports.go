@@ -22,10 +22,6 @@ type ImageGrayer interface {
 	ToGray(img image.Image) *image.Gray
 }
 
-type ImagePixelHandler interface {
-	Dilate(grayImg image.Gray, iterations int) *image.Gray
-}
-
 type ImageBinarizer interface {
 	ApplyWithAdaptiveThreshold(img *image.Gray, blockSize, fineAdjustment int) *image.Gray
 }

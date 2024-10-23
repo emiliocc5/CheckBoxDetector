@@ -2,26 +2,29 @@ package core
 
 import (
 	"errors"
-	"github.com/emiliocc5/CheckBoxDetector/internal/mocks"
-	"github.com/golang/mock/gomock"
 	"testing"
 
 	"github.com/emiliocc5/CheckBoxDetector/config"
 	"github.com/emiliocc5/CheckBoxDetector/internal/adapters"
+	"github.com/emiliocc5/CheckBoxDetector/internal/mocks"
+	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/assert"
+)
+
+const (
+	filePath = "../../resources/form.jpg"
 )
 
 func Test_AutomaticDetectImage_SuccessDetection(t *testing.T) {
 	t.Parallel()
 	cfg := config.NewConfigService()
-	cfg.File.Path = "../../resources/form.jpg"
+	cfg.File.Path = filePath
 
 	detector := NewAutomaticDetector(
 		*cfg,
 		adapters.NewInternalImageGetter(),
 		adapters.NewInternalImageDecoder(),
 		adapters.NewInternalImageGrayer(),
-		adapters.NewInternalImagePixelHandler(),
 		adapters.NewInternalImageBinarizer())
 
 	resp, err := detector.Detect()
@@ -43,7 +46,6 @@ func Test_AutomaticDetectImage_ErrorGettingImage(t *testing.T) {
 		mockInternalImageGetter,
 		adapters.NewInternalImageDecoder(),
 		adapters.NewInternalImageGrayer(),
-		adapters.NewInternalImagePixelHandler(),
 		adapters.NewInternalImageBinarizer())
 
 	resp, err := detector.Detect()
@@ -54,7 +56,7 @@ func Test_AutomaticDetectImage_ErrorGettingImage(t *testing.T) {
 func Test_AutomaticDetectImage_ErrorDecodingImage(t *testing.T) {
 	t.Parallel()
 	cfg := config.NewConfigService()
-	cfg.File.Path = "../../resources/form.jpg"
+	cfg.File.Path = filePath
 
 	ctrl := gomock.NewController(t)
 	mockInternalImageDecoder := mocks.NewMockImageDecoder(ctrl)
@@ -66,7 +68,6 @@ func Test_AutomaticDetectImage_ErrorDecodingImage(t *testing.T) {
 		adapters.NewInternalImageGetter(),
 		mockInternalImageDecoder,
 		adapters.NewInternalImageGrayer(),
-		adapters.NewInternalImagePixelHandler(),
 		adapters.NewInternalImageBinarizer())
 
 	resp, err := detector.Detect()

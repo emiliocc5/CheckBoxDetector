@@ -11,22 +11,22 @@ import (
 )
 
 const (
-	iterations     = 1
-	blockSize      = 12
-	fineAdjustment = 8
-	minSize        = 400
-	maxSize        = 600
-	minAspect      = 0.8
-	maxAspect      = 1.2
+	iterations          = 1
+	blockSize           = 20
+	fineAdjustment      = 1
+	minSize             = 400
+	maxSize             = 600
+	minAspect           = 0.8
+	maxAspect           = 1.2
+	minPercentageFilled = 0.4
 )
 
 type AutomaticDetector struct {
-	config            config.ServiceConfiguration
-	imageGetter       ports.ImageGetter
-	imageDecoder      ports.ImageDecoder
-	imageGrayer       ports.ImageGrayer
-	imagePixelHandler ports.ImagePixelHandler
-	imageBinarizer    ports.ImageBinarizer
+	config         config.ServiceConfiguration
+	imageGetter    ports.ImageGetter
+	imageDecoder   ports.ImageDecoder
+	imageGrayer    ports.ImageGrayer
+	imageBinarizer ports.ImageBinarizer
 }
 
 func NewAutomaticDetector(
@@ -34,21 +34,20 @@ func NewAutomaticDetector(
 	imageGetter ports.ImageGetter,
 	imageDecoder ports.ImageDecoder,
 	imageGrayer ports.ImageGrayer,
-	imagePixelHandler ports.ImagePixelHandler,
 	imageBinarizer ports.ImageBinarizer,
 ) *AutomaticDetector {
 	return &AutomaticDetector{
-		config:            config,
-		imageGetter:       imageGetter,
-		imageDecoder:      imageDecoder,
-		imageGrayer:       imageGrayer,
-		imagePixelHandler: imagePixelHandler,
-		imageBinarizer:    imageBinarizer,
+		config:         config,
+		imageGetter:    imageGetter,
+		imageDecoder:   imageDecoder,
+		imageGrayer:    imageGrayer,
+		imageBinarizer: imageBinarizer,
 	}
 }
 
 func (d *AutomaticDetector) Detect() (int, error) {
 	log := slog.Default()
+	var filledCheckboxes []image.Rectangle
 
 	// Get Image
 	file, errGettingImage := d.imageGetter.GetImage(d.config.File.Path)
@@ -69,29 +68,28 @@ func (d *AutomaticDetector) Detect() (int, error) {
 	// Convert image to gray scale
 	grayImage := d.imageGrayer.ToGray(decodedImg)
 
-	// Dilate the pixels slightly to make the edges thicker
-	dilatedImage := d.imagePixelHandler.Dilate(*grayImage, iterations)
-
 	// Binarize the image using an adaptive threshold
-	binarizedImage := d.imageBinarizer.ApplyWithAdaptiveThreshold(dilatedImage, blockSize, fineAdjustment)
+	binarizedImage := d.imageBinarizer.ApplyWithAdaptiveThreshold(grayImage, blockSize, fineAdjustment)
 
 	// Detect contours
 	contours := detectContours(binarizedImage)
 
-	// Filter rectangles that match with chechbox style
+	// Filter rectangles that match with filled checkbox style
 	filteredRectangles := filterRectangles(contours, minSize, maxSize, minAspect, maxAspect)
 
 	// Print filled checkboxes
 	for _, rect := range filteredRectangles {
-		log.Info(fmt.Sprintf(
-			"Filled checkbox with initial point at coordinates: %v and final point at coordinates: %v\n",
-			rect.Min, rect.Max))
+		if isCheckboxMarked(binarizedImage, rect) {
+			log.Info(fmt.Sprintf(
+				"Filled checkbox with initial point at coordinates: %v and final point at coordinates: %v\n",
+				rect.Min, rect.Max))
+			filledCheckboxes = append(filledCheckboxes, rect)
+		}
 	}
 
-	return len(filteredRectangles), nil
+	return len(filledCheckboxes), nil
 }
 
-// Detectar contornos de la imagen binarizada
 func detectContours(bin *image.Gray) []image.Rectangle {
 	bounds := bin.Bounds()
 	visited := make([][]bool, bounds.Max.Y)
@@ -116,7 +114,7 @@ func detectContours(bin *image.Gray) []image.Rectangle {
 }
 
 // TODO This method could be improved
-// Trace contour & return it
+// Trace contour & return it.
 func traceContour(img *image.Gray, startX, startY int, visited [][]bool) image.Rectangle { //nolint: cyclop
 	bounds := img.Bounds()
 	minX, minY, maxX, maxY := startX, startY, startX, startY
@@ -167,8 +165,9 @@ func traceContour(img *image.Gray, startX, startY int, visited [][]bool) image.R
 	return image.Rectangle{}
 }
 
-// Filtrar rectángulos para quedarnos solo con los de tamaño y forma correctos
-func filterRectangles(rectangles []image.Rectangle, minSize, maxSize int, minAspect, maxAspect float64) []image.Rectangle {
+func filterRectangles(rectangles []image.Rectangle, minSize,
+	maxSize int, minAspect, maxAspect float64,
+) []image.Rectangle {
 	filtered := make([]image.Rectangle, 0)
 
 	for _, rect := range rectangles {
@@ -189,4 +188,21 @@ func filterRectangles(rectangles []image.Rectangle, minSize, maxSize int, minAsp
 	}
 
 	return filtered
+}
+
+func isCheckboxMarked(img *image.Gray, rect image.Rectangle) bool {
+	blackPixelCount := 0
+	totalPixelCount := rect.Dx() * rect.Dy()
+
+	for y := rect.Min.Y; y < rect.Max.Y; y++ {
+		for x := rect.Min.X; x < rect.Max.X; x++ {
+			if img.GrayAt(x, y).Y == 0 {
+				blackPixelCount++
+			}
+		}
+	}
+
+	percentageFilled := float64(blackPixelCount) / float64(totalPixelCount)
+
+	return percentageFilled > minPercentageFilled
 }
