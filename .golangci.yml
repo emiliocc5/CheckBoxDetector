@@ -1,0 +1,147 @@
+run:
+  timeout: 5m
+  concurrency: 8
+  allow-parallel-runners: true
+  modules-download-mode: readonly
+
+
+linters:
+  enable-all: true
+  disable:
+    - contextcheck
+    - gochecknoglobals
+    - dupl
+    - funlen
+    - wsl
+    - tagliatelle
+    - gomoddirectives
+    - ireturn
+    - err113
+    - exhaustruct
+    - nonamedreturns
+    - goprintffuncname
+    - execinquery
+    - rowserrcheck
+    - sqlclosecheck
+    - wastedassign
+    - depguard
+    - unparam
+    - gomnd
+    - testpackage
+    - tagalign
+
+linters-settings:
+  errcheck:
+    check-blank: true
+  gocyclo:
+    min-complexity: 15
+  goconst:
+    min-len: 2
+    min-occurrences: 2
+  misspell:
+    locale: US
+  lll:
+    line-length: 130
+  whitespace:
+    multi-if: true   # Enforces newlines (or comments) after every multi-line if statement
+    multi-func: false # Enforces newlines (or comments) after every multi-line function signature
+  godox:
+    keywords:
+      - OPTIMIZE
+      - BUG
+      - FIXME
+
+  gofumpt:
+    extra-rules: true
+
+  gosec:
+    # To select a subset of rules to run.
+    # Available rules: https://github.com/securego/gosec#available-rules
+    includes:
+      - G401
+      - G306
+      - G101
+    # To specify a set of rules to explicitly exclude.
+    # Available rules: https://github.com/securego/gosec#available-rules
+    excludes:
+      - G204
+    # Exclude generated files
+    exclude-generated: true
+    # Filter out the issues with a lower severity than the given value. Valid options are: low, medium, high.
+    severity: "low"
+    # Filter out the issues with a lower confidence than the given value. Valid options are: low, medium, high.
+    confidence: "low"
+    # To specify the configuration of rules.
+    # The configuration of rules is not fully documented by gosec:
+    # https://github.com/securego/gosec#configuration
+    # https://github.com/securego/gosec/blob/569328eade2ccbad4ce2d0f21ee158ab5356a5cf/rules/rulelist.go#L60-L102
+    config:
+      G306: "0600"
+      G101:
+        pattern: "(?i)example"
+        ignore_entropy: false
+        entropy_threshold: "80.0"
+        per_char_threshold: "3.0"
+        truncate: "32"
+
+  gosimple:
+    # https://staticcheck.io/docs/options#checks
+    checks: [ "all" ]
+
+  testpackage:
+    # regexp pattern to skip files
+    skip-regexp: (export|internal)_test\.go
+
+  govet:
+    # settings per analyzer
+    settings:
+      printf: # analyzer name, run `go tool vet help` to see all analyzers
+        funcs: # run `go tool vet help printf` to see available settings for `printf` analyzer
+          - (github.com/golangci/golangci-lint/pkg/logutils.Log).Infof
+          - (github.com/golangci/golangci-lint/pkg/logutils.Log).Warnf
+          - (github.com/golangci/golangci-lint/pkg/logutils.Log).Errorf
+          - (github.com/golangci/golangci-lint/pkg/logutils.Log).Fatalf
+
+    # enable or disable analyzers by name
+    # run `go tool vet help` to see all analyzers
+    enable:
+      - atomicalign
+    enable-all: false
+    disable:
+      - shadow
+    disable-all: false
+
+  testifylint:
+    enable-all: true
+    disable:
+    - require-error
+
+issues:
+  exclude-dirs:
+    - vendor
+    - .git
+    - .vscode
+    - mock
+    - i18n
+    - localconfig
+    - tests
+  exclude-rules:
+    - linters:
+        - lll
+      source: "^//go:generate "
+    - linters:
+        - lll
+      source: "github.com/Bancar"
+    - path: main.go
+      linters:
+        - gocyclo
+    - path: _test\.go
+      linters:
+        - errcheck
+        - bodyclose
+        - gocognit
+        - gocyclo
+        - gomnd
+        - maintidx
+        - varnamelen
+        - revive
