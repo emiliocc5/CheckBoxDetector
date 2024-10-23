@@ -1,0 +1,5 @@
+General:
+  ENVIRONMENT: "DEV"
+
+File:
+  FILE_PATH: "resources/form.jpg"
