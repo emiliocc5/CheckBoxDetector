@@ -15,7 +15,7 @@ func NewInternalImageGrayer() *InternalImageGrayer {
 	return &InternalImageGrayer{}
 }
 
-// TODO Add nil defensive clause.
+// TODO Add nil defensive clause to avoid work with nil images.
 func (i *InternalImageGrayer) ToGray(img image.Image) *image.Gray {
 	bounds := img.Bounds()
 	gray := image.NewGray(bounds)
