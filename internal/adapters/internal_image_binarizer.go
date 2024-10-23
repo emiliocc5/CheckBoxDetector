@@ -18,7 +18,7 @@ func NewInternalImageBinarizer() *InternalImageBinarizer {
 	return &InternalImageBinarizer{}
 }
 
-// TODO Add nil defensive clause.
+// TODO Add nil defensive clause to avoid work with nil images.
 func (i *InternalImageBinarizer) ApplyWithAdaptiveThreshold(
 	img *image.Gray, blockSize, fineAdjustment int,
 ) *image.Gray {
