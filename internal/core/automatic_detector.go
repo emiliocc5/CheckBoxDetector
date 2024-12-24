@@ -45,7 +45,7 @@ func NewAutomaticDetector(
 	}
 }
 
-func (d *AutomaticDetector) Detect() (int, error) {
+func (d *AutomaticDetector) Detect(id int) (int, error) {
 	log := slog.Default()
 	var filledCheckboxes []image.Rectangle
 
@@ -81,8 +81,8 @@ func (d *AutomaticDetector) Detect() (int, error) {
 	for _, rect := range filteredRectangles {
 		if isCheckboxMarked(binarizedImage, rect) {
 			log.Info(fmt.Sprintf(
-				"Filled checkbox with initial point at coordinates: %v and final point at coordinates: %v\n",
-				rect.Min, rect.Max))
+				"ID: %d, Filled checkbox with initial point at coordinates: %v and final point at coordinates: %v\n",
+				id, rect.Min, rect.Max))
 			filledCheckboxes = append(filledCheckboxes, rect)
 		}
 	}

@@ -7,7 +7,7 @@ import (
 
 //go:generate mockgen -destination=../mocks/services_ports_mock.go -package=mocks -source=services_ports.go
 type CheckBoxDetector interface {
-	Detect() (int, error)
+	Detect(id int) (int, error)
 }
 
 type ImageGetter interface {
